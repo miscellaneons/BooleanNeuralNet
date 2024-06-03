@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace BooleanNeuralNet.Math
 {
+
+	/// <summary>
+	/// the three types of boolean operators supported
+	/// </summary>
 	public enum BooleanEnumeration
 	{
 		And,

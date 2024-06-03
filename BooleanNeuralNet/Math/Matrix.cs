@@ -4,7 +4,15 @@ namespace BooleanNeuralNet.Math
 {
 	public class Matrix : List<Vector>
 	{
+
+		/// <summary>
+		/// do boolean operator instead of matrix multiplication
+		/// </summary>
 		public Boolean IsBoolean { get; set; } = true;
+
+		/// <summary>
+		/// boolean operator to perform <see cref="BooleanEnumeration"/>
+		/// </summary>
 		public Double Maximum { get; set; } = 1.0;
 
 		public Matrix(BooleanEnumeration? booleanEnumeration = null, double max = 1.0)
@@ -42,6 +50,12 @@ namespace BooleanNeuralNet.Math
 			return matrix;
 		}
 
+		/// <summary>
+		/// backpropogation
+		/// </summary>
+		/// <param name="actualOut"> output of the neural network </param>
+		/// <param name="expectedOut"> the desired output </param>
+		/// <param name="learningRate"> a scaling constant </param>
 		public void Learn(Vector actualOut, Vector expectedOut, double learningRate = 0.1)
 		{
 			for (int i = 0; i < this.Count; i++)
@@ -50,27 +64,30 @@ namespace BooleanNeuralNet.Math
 				var column = this[i];
 				for (int j = 0; j < column.Count; j++)
 				{
-					column[j] -= learningRate * error * actualOut.Derivative[i][j];
+					column[j] -= learningRate * error * math.Sign(column[j]);
 				}
 			}
 		}
 
+		/// <summary>
+		/// do multiplication or boolean operation
+		/// </summary>
+		/// <param name="layer"> the layer </param>
+		/// <param name="inputVector"> the input vector </param>
+		/// <returns> the output vector </returns>
 		public static Vector operator *(Matrix layer, Vector inputVector)
 		{
 			Vector product = new Vector();
 
 			if (layer is null || inputVector is null)
 				return product;
-
-			product.Derivative = new Matrix();
-
-			Double multiplier = math.Abs(layer.Maximum - 0.5) + 0.5;
+			
 			for (int i = 0; i < layer.Count; i++)
 			{
 				var column = layer[i];
 				Double value = layer.IsBoolean ? 1.0 : 0.0;
 				Double scale = 1.0;
-				Vector derivativeRow = new Vector();
+				
 
 				for (int j = 0; j < column.Count; j++)
 				{
@@ -84,8 +101,6 @@ namespace BooleanNeuralNet.Math
 						for (int k = 0; k < column.Count; k++) 
 							if (k != j)
 							    derivative *= layer.Maximum - inputVector[k] * item;
-
-						derivativeRow.Add(derivative);
 					}
 					else
 						value += inputVector[j] * item;
@@ -95,15 +110,6 @@ namespace BooleanNeuralNet.Math
 				{
 					value = (scale - value) / (scale > 0.0 ? scale : 1.0);
 
-					if (scale > 0.1)
-						for (int k = 0; k < column.Count; k++)
-							derivativeRow[k] /= (scale > 0.0 ? scale : 1.0);
-
-					//if (value < 0)
-					//	for (int k = 0; k < column.Count; k++)
-					//		derivativeRow[k] *= -1.0;
-
-					product.Derivative.Add(derivativeRow);
 					value = math.Abs(value);
 				}
 
